@@ -1,0 +1,40 @@
+version: "3.9"
+
+volumes:
+  pgdata:
+
+
+networks:
+  backend:
+  db_net:
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log
+    environment:
+      POSTGRES_DB: ${NAME}
+      POSTGRES_USER: ${USER}
+      POSTGRES_PASSWORD: ${PASSWORD}
+    networks:
+      - db_net
+
+  django_app:
+    build: .
+    env_file:
+      - ./.env
+    command:
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./shop:/shop
+    networks:
+      - db_net
+      - backend

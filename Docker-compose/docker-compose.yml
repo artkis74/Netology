@@ -1,0 +1,84 @@
+version: "3.9"
+
+volumes:
+  pgdata:
+  static_volume:
+  nginx:
+
+networks:
+  backend:
+  db_net:
+
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: 'new_db'
+      POSTGRES_USER: 'admin1'
+      POSTGRES_PASSWORD: 'admin1pwd'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin1 -d new_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+    networks:
+      - db_net
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4:5.7
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "admin1@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin1pwd"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+    networks:
+      - db_net
+
+  django_app:
+    build: .
+    env_file:
+      - ./stocks_products/.env
+    depends_on:
+      - pgadmin
+      - postgres
+    ports:
+      - "8000:8000"
+    volumes:
+      - static_volume:/docker-compose/stocks_products/staticfiles
+    networks:
+      - db_net
+      - backend
+  nginx:
+    build: ./nginx
+    ports:
+      - "8888:80"
+    volumes:
+       - ./static_volume:/docker-compose/stocks_products/stocks_products/staticfiles
+       - ./nginx:/etc/nginx/conf.d
+    networks:
+      - backend
+    depends_on:
+      - django_app

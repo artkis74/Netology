@@ -1,0 +1,45 @@
+name: Тестирование и развёртывание проекта (CICD)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tests:
+    runs-on: ubuntu-20.04
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DEBUG: ${{ secrets.DEBUG }}
+      ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
+    steps:
+      - name: Проверяем репозиторий на наличие изменений
+        uses: actions/checkout@v3
+
+      - name: Установка python и создание окружения
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9
+
+      - name: Установить зависимости
+        run: pip install -r stocks_products/requirements.txt
+
+      - name: Линтинг
+        run: flake8 stocks_products/logistic/ --exclude=stocks_products/logistic/migrations/
+
+
+      - name: Тесты
+        run: python stocks_products/manage.py test
+        env:
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          DEBUG: ${{ env.DEBUG }}
+          ALLOWED_HOSTS: ${{ env.ALLOWED_HOSTS }}
+
+
+      - name: Деплой
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: expect /home/artem/CI-CD/stocks_products/pull.exp

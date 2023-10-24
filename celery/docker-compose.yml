@@ -1,0 +1,10 @@
+version: '3.1'
+
+networks:
+  dev_network:
+
+services:
+  redis:
+    image: redis:7.0.0-alpine3.15
+    ports:
+      - "6379:6379"

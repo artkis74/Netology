@@ -1,0 +1,6 @@
+/include/
+/Lib/
+/Scripts/
+.env
+.idea/
+venv/

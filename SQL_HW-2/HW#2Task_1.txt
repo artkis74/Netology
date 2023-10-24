@@ -1,0 +1,46 @@
+CREATE TABLE IF NOT EXISTS Musicians (
+musicians_id SERIAL PRIMARY KEY,
+name  VARCHAR (60) UNIQUE NOT NULL CHECK (name !='')
+);
+
+CREATE TABLE IF NOT EXISTS Musical_style (
+musical_style_id SERIAL PRIMARY KEY,
+style_name VARCHAR (60) UNIQUE NOT NULL CHECK (style_name !='')
+);
+
+CREATE TABLE IF NOT EXISTS Albums (
+albums_id SERIAL PRIMARY KEY,
+release_date DATE NOT NULL CHECK (release_date > '1966-01-01'), 
+name VARCHAR (60) NOT NULL CHECK (name !='')
+);
+
+CREATE TABLE IF NOT EXISTS Tracks (
+tracks_id SERIAL PRIMARY KEY,
+name VARCHAR (60) NOT NULL CHECK (name !=''),
+duration INTEGER NOT NULL CHECK (name !=''),
+album INTEGER NOT NULL REFERENCES Albums(albums_id)
+);
+
+CREATE TABLE IF NOT EXISTS Collections (
+collection_id SERIAL PRIMARY KEY,
+name VARCHAR (60) NOT NULL CHECK (name !=''),
+album_date DATE NOT NULL  CHECK (album_date > '1966-01-01')
+);
+
+CREATE TABLE IF NOT EXISTS MusiciansStyle (
+musicians_id INTEGER NOT NULL REFERENCES Musicians(musicians_id),
+musical_style_id INTEGER NOT NULL REFERENCES Musical_style(musical_style_id),
+CONSTRAINT pk PRIMARY KEY (musicians_id, musical_style_id)
+);
+
+CREATE TABLE IF NOT EXISTS CollectionTrack (
+tracks_id INTEGER NOT NULL REFERENCES Tracks(tracks_id),
+collection_id INTEGER NOT NULL REFERENCES Collections(collection_id),
+CONSTRAINT CollectionTrack_id PRIMARY KEY (tracks_id, collection_id)
+);
+
+CREATE TABLE IF NOT EXISTS MusiciansAlbums (
+albums_id INTEGER NOT NULL REFERENCES Albums(albums_id),
+musicians_id INTEGER NOT NULL REFERENCES Musicians(musicians_id),
+CONSTRAINT pkey PRIMARY KEY (albums_id, musicians_id )
+);
